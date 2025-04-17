@@ -134,9 +134,6 @@ if st.button("🌟 Lancer la simulation"):
 
 
 
-st.set_page_config(layout="wide")
-st.title("Simulateur Shell Eco Marathon \U0001F697\U0001F4A8")
-
 # --- Paramètres globaux de simulation ---
 st.sidebar.header("Paramètres de simulation")
 vent = st.sidebar.checkbox("Activer le vent", value=False)
