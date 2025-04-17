@@ -132,3 +132,47 @@ if st.button("🌟 Lancer la simulation"):
 
     except Exception as e:
         st.warning(f"Données réelles non disponibles ou erreur lors du chargement : {e}")
+
+with st.expander("🛲️ Animation du vent autour du circuit"):
+    wind_speed = 5 * 0.514
+    wind_angle_global = np.deg2rad(135)
+    C_wind = 0.5
+
+    wind_vector = np.array([
+        wind_speed * np.cos(wind_angle_global),
+        wind_speed * np.sin(wind_angle_global)
+    ])
+
+    frames = []
+    for i in range(0, len(pos_x), max(len(pos_x) // 50, 1)):
+        x = pos_x[i]
+        y = pos_y[i]
+        heading = heading_interp(distance[i] if not hasattr(distance, 'iloc') else distance.iloc[i])
+        car_dir = np.array([np.cos(heading), np.sin(heading)])
+        v_wind_along = np.dot(wind_vector, car_dir)
+        eff_wind = v_wind_along * car_dir
+
+        frame = go.Frame(data=[
+            go.Scatter(x=pos_x, y=pos_y, mode="lines", line=dict(color="black"), name="Circuit"),
+            go.Scatter(x=[x], y=[y], mode="markers", marker=dict(color="blue", size=10), name="Voiture"),
+            go.Scatter(x=[x, x + wind_vector[0] * 5], y=[y, y + wind_vector[1] * 5],
+                       mode="lines+markers", name="Vent global", line=dict(color="red", width=3)),
+            go.Scatter(x=[x, x + eff_wind[0] * 5], y=[y, y + eff_wind[1] * 5],
+                       mode="lines+markers", name="Vent (proj.)", line=dict(color="green", width=3)),
+            go.Scatter(x=[x, x + car_dir[0] * 5], y=[y, y + car_dir[1] * 5],
+                       mode="lines+markers", name="Cap voiture", line=dict(color="blue", dash="dot"))
+        ])
+        frames.append(frame)
+
+    layout = go.Layout(
+        title="Vecteurs de vent et cap de la voiture",
+        xaxis=dict(title="X (m)"),
+        yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
+        updatemenus=[dict(type="buttons", showactive=False,
+                          buttons=[dict(label="Play", method="animate", args=[[None],
+                                  dict(frame=dict(duration=100, redraw=True),
+                                       fromcurrent=True, mode="immediate")])])]
+    )
+
+    fig_wind = go.Figure(data=frames[0].data, frames=frames, layout=layout)
+    st.plotly_chart(fig_wind, use_container_width=True)
