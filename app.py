@@ -16,7 +16,7 @@ st.title("Simulateur Shell Eco Marathon \U0001F697\U0001F4A8")
 # --- Paramètres globaux de simulation ---
 st.sidebar.header("Paramètres de simulation")
 vent = st.sidebar.checkbox("Activer le vent", value=False, key="vent_checkbox")
-vitesse_vent = st.sidebar.slider("Vitesse du vent (m/s)", 0.0, 10.0, 2.57, step=0.05, key="vent_vitesse")
+vitesse_vent = st.sidebar.slider("Vitesse du vent (m/s, format="%.2f")", 0.0, 10.0, 2.57, step=0.1, key="vent_vitesse")
 angle_vent_deg = st.sidebar.slider("Angle du vent (degrés)", 0, 360, 135, key="vent_angle")
 wind_angle_global = np.deg2rad(angle_vent_deg)
 aero = st.sidebar.checkbox("Activer l'aérodynamique", value=True)
@@ -83,12 +83,12 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
     st.plotly_chart(fig_wind, use_container_width=True)
 
 # --- Paramètres de simulation spécifiques ---
-borne_min1 = st.sidebar.slider("Borne min phase 1", 0.0, 20.0, 0.0, step=0.05)
-borne_max1 = st.sidebar.slider("Borne max phase 1", 0.0, 20.0, 8.39, step=0.05)
-borne_min2 = st.sidebar.slider("Borne min phase 2", 0.0, 20.0, 5.8, step=0.05)
-borne_max2 = st.sidebar.slider("Borne max phase 2", 0.0, 20.0, 7.7, step=0.05)
-borne_min3 = st.sidebar.slider("Borne min phase 3", 0.0, 20.0, 7.0, step=0.05)
-borne_max3 = st.sidebar.slider("Borne max phase 3", 0.0, 20.0, 7.3, step=0.05)
+borne_min1 = st.sidebar.slider("Borne min phase 1", 0.0, 20.0, 0.0, step=0.05,format="%.2f")
+borne_max1 = st.sidebar.slider("Borne max phase 1", 0.0, 20.0, 8.39, step=0.05,format="%.2f")
+borne_min2 = st.sidebar.slider("Borne min phase 2", 0.0, 20.0, 5.8, step=0.05,format="%.2f")
+borne_max2 = st.sidebar.slider("Borne max phase 2", 0.0, 20.0, 7.7, step=0.05,format="%.2f")
+borne_min3 = st.sidebar.slider("Borne min phase 3", 0.0, 20.0, 7.0, step=0.05,format="%.2f")
+borne_max3 = st.sidebar.slider("Borne max phase 3", 0.0, 20.0, 7.3, step=0.05,format="%.2f")
 distance_totale = distance.iloc[-1]
 temps_max = st.sidebar.slider("Temps max de simulation (s)", 100, 600, 228)
 
