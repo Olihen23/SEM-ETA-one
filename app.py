@@ -9,7 +9,7 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
-from modele_vehicule import simuler_vehicule_et_calculer_conso, distance,pos_x,pos_y,heading_interp
+from modele_vehicule import simuler_vehicule_et_calculer_conso, distance, pos_x, pos_y, heading_interp
 
 st.set_page_config(layout="wide")
 st.title("Simulateur Shell Eco Marathon \U0001F697\U0001F4A8")
@@ -133,9 +133,21 @@ if st.button("🌟 Lancer la simulation"):
     except Exception as e:
         st.warning(f"Données réelles non disponibles ou erreur lors du chargement : {e}")
 
+
+
+st.set_page_config(layout="wide")
+st.title("Simulateur Shell Eco Marathon \U0001F697\U0001F4A8")
+
+# --- Paramètres globaux de simulation ---
+st.sidebar.header("Paramètres de simulation")
+vent = st.sidebar.checkbox("Activer le vent", value=False)
+vitesse_vent = st.sidebar.slider("Vitesse du vent (m/s)", 0.0, 10.0, 2.57, step=0.1)
+angle_vent_deg = st.sidebar.slider("Angle du vent (degrés)", 0, 360, 135)
+wind_angle_global = np.deg2rad(angle_vent_deg)
+
+# --- Animation du vent ---
 with st.expander("🛲️ Animation du vent autour du circuit"):
-    wind_speed = 5 * 0.514
-    wind_angle_global = np.deg2rad(135)
+    wind_speed = vitesse_vent * 0.514
     C_wind = 0.5
 
     wind_vector = np.array([
@@ -152,7 +164,7 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
         v_wind_along = np.dot(wind_vector, car_dir)
         eff_wind = v_wind_along * car_dir
 
-        frame = go.Frame(data=[
+        frames.append(go.Frame(name=str(i), data=[
             go.Scatter(x=pos_x, y=pos_y, mode="lines", line=dict(color="black"), name="Circuit"),
             go.Scatter(x=[x], y=[y], mode="markers", marker=dict(color="blue", size=10), name="Voiture"),
             go.Scatter(x=[x, x + wind_vector[0] * 5], y=[y, y + wind_vector[1] * 5],
@@ -161,18 +173,20 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
                        mode="lines+markers", name="Vent (proj.)", line=dict(color="green", width=3)),
             go.Scatter(x=[x, x + car_dir[0] * 5], y=[y, y + car_dir[1] * 5],
                        mode="lines+markers", name="Cap voiture", line=dict(color="blue", dash="dot"))
-        ])
-        frames.append(frame)
+        ]))
 
-    layout = go.Layout(
-        title="Vecteurs de vent et cap de la voiture",
-        xaxis=dict(title="X (m)"),
-        yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
-        updatemenus=[dict(type="buttons", showactive=False,
-                          buttons=[dict(label="Play", method="animate", args=[[None],
-                                  dict(frame=dict(duration=100, redraw=True),
-                                       fromcurrent=True, mode="immediate")])])]
+    fig_wind = go.Figure(
+        data=frames[0].data,
+        layout=go.Layout(
+            title="Vecteurs de vent et cap de la voiture",
+            xaxis=dict(title="X (m)"),
+            yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
+            updatemenus=[dict(type="buttons", showactive=False,
+                              buttons=[dict(label="Play", method="animate",
+                                            args=[None, dict(frame=dict(duration=100, redraw=True),
+                                                             fromcurrent=True, mode="immediate")])])]
+        ),
+        frames=frames
     )
 
-    fig_wind = go.Figure(data=frames[0].data, frames=frames, layout=layout)
     st.plotly_chart(fig_wind, use_container_width=True)
