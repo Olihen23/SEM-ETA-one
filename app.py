@@ -47,7 +47,7 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
         v_wind_along = np.dot(wind_vector, car_dir)
         eff_wind = v_wind_along * car_dir
 
-        frames.append(go.Frame(name=str(i), data=[
+        frames.append(go.Frame(name=str(i), data=base_trace + [
             go.Scatter(x=[x], y=[y], mode="markers", marker=dict(color="blue", size=10), name="Voiture"),
             go.Scatter(x=[x, x + wind_vector[0] * 5], y=[y, y + wind_vector[1] * 5],
                        mode="lines+markers", name="Vent global", line=dict(color="red", width=3)),
@@ -56,9 +56,11 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
             go.Scatter(x=[x, x + car_dir[0] * 5], y=[y, y + car_dir[1] * 5],
                        mode="lines+markers", name="Cap voiture", line=dict(color="blue", dash="dot"))
         ]))
+
     initial_data = base_trace.copy()
     if frames:
         initial_data += frames[0].data
+
     fig_wind = go.Figure(
         data=initial_data,
         layout=go.Layout(
@@ -70,7 +72,7 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
                 showactive=False,
                 buttons=[
                     dict(label="Play", method="animate",
-                         args=[None, dict(frame=dict(duration=200, redraw=True), fromcurrent=True)]),
+                         args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)]),
                     dict(label="Pause", method="animate", args=[[None], dict(mode="immediate", frame=dict(duration=0, redraw=False), fromcurrent=True)])
                 ]
             )]
