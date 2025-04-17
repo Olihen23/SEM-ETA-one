@@ -48,7 +48,7 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
         eff_wind = v_wind_along * car_dir
 
         frames.append(go.Frame(name=str(i), data=base_trace + [
-            go.Scatter(x=[x, x + car_dir[0] * 2], y=[y, y + car_dir[1] * 2], mode="point", line=dict(color="blue", width=2), name="Voiture"),
+            go.Scatter(x=[x, x + car_dir[0] * 2], y=[y, y + car_dir[1] * 2], mode="markers", line=dict(color="blue", width=2), name="Voiture"),
             go.Scatter(x=[x, x + wind_vector[0] * 5], y=[y, y + wind_vector[1] * 5],
                        mode="lines+markers", name="Vent global", line=dict(color="red", width=3)),
             go.Scatter(x=[x, x + eff_wind[0] * 5], y=[y, y + eff_wind[1] * 5],
