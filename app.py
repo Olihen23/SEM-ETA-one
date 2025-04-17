@@ -60,7 +60,7 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
     if frames:
         initial_data += frames[0].data
     fig_wind = go.Figure(
-        data=intial_data,
+        data=initial_data,
         layout=go.Layout(
             title="Vecteurs de vent et cap de la voiture",
             xaxis=dict(title="X (m)"),
