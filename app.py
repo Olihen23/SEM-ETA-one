@@ -70,7 +70,7 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
                 showactive=False,
                 buttons=[
                     dict(label="Play", method="animate",
-                         args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)]),
+                         args=[None, dict(frame=dict(duration=200, redraw=True), fromcurrent=True)]),
                     dict(label="Pause", method="animate", args=[[None], dict(mode="immediate", frame=dict(duration=0, redraw=False), fromcurrent=True)])
                 ]
             )]
