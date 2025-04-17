@@ -50,9 +50,9 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
         frames.append(go.Frame(name=str(i), data=base_trace + [
             go.Scatter(x=[x], y=[y], mode="markers", marker=dict(color="blue", size=10), name="Voiture"),
             go.Scatter(x=[x, x + wind_vector[0] * 5], y=[y, y + wind_vector[1] * 5],
-                       mode="lines+markers", name="Vent global", line=dict(color="red", width=5)),
+                       mode="arrow", name="Vent global", line=dict(color="red", width=5)),
             go.Scatter(x=[x, x + eff_wind[0] * 5], y=[y, y + eff_wind[1] * 5],
-                       mode="lines+markers", name="Vent (proj.)", line=dict(color="green", width=8))
+                       mode="arrow", name="Vent (proj.)", line=dict(color="green", width=8))
         ]))
 
     initial_data = base_trace.copy()
