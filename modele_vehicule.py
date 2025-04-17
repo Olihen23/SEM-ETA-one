@@ -44,7 +44,8 @@ data_elec = pd.read_excel("Caracterisation Moteur.xlsx", "Test moteur")
 data_elec.columns = [col.lower() for col in data_elec.columns]
 data_elec.ffill(inplace=True)
 data_elec.dropna(subset=["couple", "vitesse rotor"], inplace=True)
-data_elec = data_elec.groupby("vitesse rotor", as_index=False).mean()
+cols_num = data_elec.select_dtypes(include='number').columns
+data_elec = data_elec.groupby("vitesse rotor", as_index=False)[cols_num].mean()
 
 x_elec = data_elec["vitesse rotor"]
 f_interpol_couple_elec = interp1d(x_elec, data_elec["couple"], kind="linear", fill_value="extrapolate")
