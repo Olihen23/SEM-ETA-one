@@ -4,8 +4,9 @@ Created on Thu Apr 17 09:43:02 2025
 
 @author: olivi
 """
-
 import streamlit as st
+st.set_page_config(layout="wide")
+
 import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
