@@ -11,8 +11,6 @@ import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
 from modele_vehicule import simuler_vehicule_et_calculer_conso, distance, pos_x, pos_y, heading_interp
-
-st.set_page_config(layout="wide")
 st.title("Simulateur Shell Eco Marathon \U0001F697\U0001F4A8")
 
 st.sidebar.header("Paramètres de simulation")
