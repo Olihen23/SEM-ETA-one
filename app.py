@@ -35,11 +35,11 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
     ])
 
     base_trace = [
-        go.Scatter(x=pos_x, y=pos_y, mode="lines", line=dict(color="black"), name="Circuit")
+        go.Scatter(x=pos_x, y=pos_y, mode="lines", line=dict(color="black"), name="Circuit", showlegend=True)
     ]
 
     frames = []
-    for i in range(0, len(pos_x), max(len(pos_x) // 50, 1)):
+    for i in range(0, len(pos_x), max(len(pos_x) // 150, 1)):
         x = pos_x[i]
         y = pos_y[i]
         heading = heading_interp(distance[i] if not hasattr(distance, 'iloc') else distance.iloc[i])
