@@ -52,7 +52,9 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
             go.Scatter(x=[x, x + wind_vector[0] * 5], y=[y, y + wind_vector[1] * 5],
                        mode="lines+markers", name="Vent global", line=dict(color="red", width=3)),
             go.Scatter(x=[x, x + eff_wind[0] * 5], y=[y, y + eff_wind[1] * 5],
-                       mode="lines+markers", name="Vent (proj.)", line=dict(color="green", width=3))
+                       mode="lines+markers", name="Vent (proj.)", line=dict(color="green", width=3)),
+            go.Scatter(x=[x, x + car_dir[0] * 5], y=[y, y + car_dir[1] * 5],
+                       mode="lines+markers", name="Cap voiture", line=dict(color="blue", dash="dot"))
         ]))
 
     initial_data = base_trace.copy()
