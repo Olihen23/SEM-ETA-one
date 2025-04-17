@@ -56,9 +56,11 @@ with st.expander("🛲️ Animation du vent autour du circuit"):
             go.Scatter(x=[x, x + car_dir[0] * 5], y=[y, y + car_dir[1] * 5],
                        mode="lines+markers", name="Cap voiture", line=dict(color="blue", dash="dot"))
         ]))
-
+    initial_data = base_trace.copy()
+    if frames:
+        initial_data += frames[0].data
     fig_wind = go.Figure(
-        data=base_trace + (frames[0].data if len(frames) > 0 else []),
+        data=intial_data,
         layout=go.Layout(
             title="Vecteurs de vent et cap de la voiture",
             xaxis=dict(title="X (m)"),
