@@ -58,8 +58,10 @@ moteur_elec["vitesse rotor"] = pd.to_numeric(moteur_elec["vitesse rotor"], error
 moteur_elec.dropna(subset=["couple", "vitesse rotor"], inplace=True)
 
 # Suppression ou agrégation des doublons sur la colonne "couple"
-moteur_elec = moteur_elec.groupby("couple", as_index=False).mean()
-moteur_elec = moteur_elec.groupby("vitesse rotor", as_index=False).mean()
+cols_numeric = moteur_elec.select_dtypes(include='number').columns
+moteur_elec = moteur_elec.groupby("couple", as_index=False)[cols_numeric].mean()
+cols_num = data_elec.select_dtypes(include='number').columns
+data_elec = data_elec.groupby("vitesse rotor", as_index=False)[cols_num].mean()
 
 # Définir x_elec comme étant les valeurs de "couple"
 x_elec = moteur_elec["vitesse rotor"]
