@@ -707,7 +707,7 @@ if __name__=="__main__":
         consommation=conso_instant_vals,
         file_name="simulation_results_1.csv"
    )
-
+"""
 lap_4_data=pd.read_csv("lap_4_data.csv")
 lap_4_data.columns = [col.lower() for col in lap_4_data.columns]
 lap_4_data.reset_index(drop=True, inplace=True)
@@ -836,3 +836,5 @@ anim = FuncAnimation(fig, update, frames=len(pos_x),
                      interval=50, blit=True)
 
 plt.show()
+
+"""
