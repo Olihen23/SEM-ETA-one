@@ -16,7 +16,7 @@ from matplotlib.animation import FuncAnimation
 # 1) Importation et interpolation des données moteur
 # =============================================================================
 
-moteur_consomini = pd.read_excel(r"Mesures moteur Consomini.xlsx", "Moteur consomini")
+moteur_consomini = pd.read_excel(r"C:\Users\olivi\Desktop\Cours\5eme semestre\P5\Code\Mesures moteur Consomini.xlsx", "Moteur consomini")
 moteur_consomini.columns = [col.lower() for col in moteur_consomini.columns]
 moteur_consomini.reset_index(drop=True, inplace=True)
 moteur_consomini.ffill(inplace=True)
@@ -39,10 +39,10 @@ additional_points = pd.DataFrame({
 moteur_consomini = pd.concat([new_points, additional_points, moteur_consomini],
                              ignore_index=True).sort_values("n moteur").reset_index(drop=True)
 moteur_consomini = moteur_consomini.groupby("n moteur", as_index=False).mean()
-
+#*0.61*1.06
 x = moteur_consomini["n moteur"]
-f_interpol_couple = interp1d(x, moteur_consomini["m corr"]*0.61, kind="cubic", fill_value="extrapolate")
-f_interpol_csp = interp1d(x, moteur_consomini["csp"], kind="linear", fill_value="extrapolate")
+f_interpol_couple = interp1d(x, moteur_consomini["m corr"]*0.61*1.06, kind="cubic", fill_value="extrapolate")
+f_interpol_csp = interp1d(x, moteur_consomini["csp"]*1.55, kind="linear", fill_value="extrapolate")
 # =============================================================================
 # 2) Importation des moteur électrique 
 # =============================================================================
@@ -58,8 +58,7 @@ moteur_elec["vitesse rotor"] = pd.to_numeric(moteur_elec["vitesse rotor"], error
 moteur_elec.dropna(subset=["couple", "vitesse rotor"], inplace=True)
 
 # Suppression ou agrégation des doublons sur la colonne "couple"
-cols_numeric = moteur_elec.select_dtypes(include='number').columns
-moteur_elec = moteur_elec.groupby("couple", as_index=False)[cols_numeric].mean()
+moteur_elec = moteur_elec.groupby("couple", as_index=False).mean()
 moteur_elec = moteur_elec.groupby("vitesse rotor", as_index=False).mean()
 
 # Définir x_elec comme étant les valeurs de "couple"
@@ -72,7 +71,7 @@ f_interpol_P_elec=interp1d(x_elec,moteur_elec["pelec calc"],kind="linear",fill_v
 # =============================================================================
 # 3) Importation des données enviolo
 # =============================================================================
-data_enviolo = pd.read_excel(r"calcul enviolo-reel-26-04.xlsx", skiprows=12)
+data_enviolo = pd.read_excel(r"C:\Users\olivi\Desktop\Cours\5eme semestre\P5\Code\calcul enviolo-reel-26-04.xlsx", skiprows=12)
 data_enviolo.columns = [col.lower() for col in data_enviolo.columns]
 data_enviolo.reset_index(drop=True, inplace=True)
 data_enviolo.ffill(inplace=True)
@@ -103,7 +102,7 @@ f_interp_env = interp1d(x_env, y_env, kind="linear", fill_value="extrapolate")
 # 4) Chargement des coordonnées de la piste
 # =============================================================================
 
-xyz = pd.read_csv(r'xyz_coordinates_lap4.csv')
+xyz = pd.read_csv(r'C:\Users\olivi\Desktop\Cours\5eme semestre\P5\data\xyz_coordinates_lap4.csv')
 xyz.columns = [col.lower() for col in xyz.columns]
 distance = xyz["cumulative_distance"]
 altitude = xyz["z"]
@@ -122,7 +121,18 @@ angle_1.columns = [col.lower() for col in angle_1.columns]
 rayon_1=angle_1["rayon"]
 angle_ray=angle_1["angle"]
 # =============================================================================
-# 5) Paramètres embrayage dynamique
+# 5)Chargement du Cx variable
+# =============================================================================
+data_cx=pd.read_excel("Cx_voiture_vent.xlsx",skiprows=3)
+data_cx.columns = [col.lower() for col in data_cx.columns]
+angle=data_cx["angle (°)"]
+Cx=data_cx["cx (-)"]
+f_interp_cx = interp1d(angle,Cx, kind="linear", fill_value="extrapolate")
+
+
+
+# =============================================================================
+# 6) Paramètres embrayage dynamique
 # =============================================================================
 
 m_mass   = 0.0774       # Masse d'une masselotte [kg]
@@ -130,34 +140,33 @@ r_mass   = 0.0316       # Rayon effectif [m]
 N_mass   = 4            # Nombre de masselottes
 mu_clutch = 0.3         # Coeff de frottement
 R_cloche = 0.045        # Bras de levier
-F_ressort = 28.23       # Force ressort
+F_ressort =28.23       # Force ressort
 masse = 217
 rapport_chaine1 = 95/11
 rapport_chaine2 = 2.4
 rayon_roue = 0.279
 
+
 # =============================================================================
-# 6) Classes réutilisables
+# 7) Classes réutilisables
 # =============================================================================
 
 class ParametresVehicule:
     def __init__(self):
         self.resistance_roulement = 0.0013
-        self.coefficient_trainee = 0.25
+        self.coefficient_trainee = 0.194
         self.surface_frontale = 0.789
         self.masse = 217
         self.rayon_roue = 0.279
-        self.rendement_chaine1 = 0.96
-        self.rendement_chaine2 = 0.96
+        self.rendement_chaine1 = 0.97
+        self.rendement_chaine2 = 0.97
         self.rendement_transmission = 0.83
         self.rapport_chaine1 = 95/11
         self.rapport_chaine2 = 2.4
         self.g = 9.81
         self.densite_air = 1.225
-        self.Cwind=5
-
-
         
+
 
 class ProfilPiste:
     def __init__(self, distance, altitude, rayon_courbure=None,angle_courbure=None):
@@ -194,6 +203,13 @@ class ProfilPiste:
             return self.interpolateur_angle(rayon)
         else:
             return np.inf
+
+class Aerodynamique:
+    def __init__(self, surface_frontale, densite_air, f_interp_cx):
+        self.S = surface_frontale
+        self.rho = densite_air
+        self.f_interp_cx = f_interp_cx
+        
 class Moteur:
     def __init__(self, f_interpol_couple, f_interp_env):
         self.f_interpol_couple = f_interpol_couple
@@ -255,22 +271,39 @@ class DynamiqueVehicule:
             F_gravite = 0
             
         if self.vent_active:
-            car_heading=heading_interp(position)
-            v_dir=np.array([np.cos(car_heading),np.sin(car_heading)])
-            
-            wind_vector= np.array([self.vitesse_vent*np.cos(self.wind_angle_global),
-                                   self.vitesse_vent*np.sin(self.wind_angle_global)])  
-            v_wind_along=np.dot(wind_vector,v_dir)
-            F_wind=0.5*self.params.Cwind*self.params.surface_frontale * self.params.densite_air * (v_wind_along**2) * np.sign(v_wind_along)
-            
+            # cap du véhicule
+            heading = heading_interp(position)
+
+    # vent global
+            vx = self.vitesse_vent * np.cos(self.wind_angle_global)
+            vy = self.vitesse_vent * np.sin(self.wind_angle_global)
+
+    # projection du vent sur l'axe longitudinal
+            v_wind_along = vx * np.cos(heading) + vy * np.sin(heading)
+
+    # angle entre vent et cap (rad → °)
+            phi = np.arctan2(vy, vx) - heading
+            phi = (phi + np.pi) % (2*np.pi) - np.pi
+            angle_rel_deg = abs(np.degrees(phi))
+
+    # Cx spécifique au vent venant de cet angle
+            Cx_wind = float(f_interp_cx(angle_rel_deg))
+
+
+    # calcul de la force de traînée du vent
+            F_wind = 0.5 * Cx_wind \
+               * self.params.surface_frontale \
+               * self.params.densite_air \
+               * (v_wind_along**2) \
+               * np.sign(v_wind_along)
         else:
-             F_wind=0   
+                F_wind = 0.0
 
 
         return F_moteur, F_aero, F_roulement, F_gravite, F_wind
 
 # =============================================================================
-# 7) Simulation principale 
+# 8) Simulation principale 
 # =============================================================================
 
 def simuler_vehicule_et_calculer_conso(distance_totale,
@@ -284,7 +317,10 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
                                        aero_active=True,
                                        gravite_active=True,
                                        enviolo_on=True,
-                                       moteur_elec=False
+                                       moteur_elec=False,
+                                       coef_aero=1.6,
+                                       coef_roul=2,
+                                       plot=True
                                        ):
 
     params = ParametresVehicule()
@@ -372,7 +408,8 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
 
     # 1) Calcul du couple moteur
         if moteur_actif:
-            rpm_moteur = max(omega_m * 60/(2*np.pi), 0)
+            rpm_moteur_nor= omega_m * 60/(2*np.pi)
+            rpm_moteur=rpm_moteur_nor
             couple_moteur = f_interpol_couple(rpm_moteur)
         else:
             rpm_moteur = 0
@@ -426,10 +463,12 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
             roue_libre_active = True
             C_transmis_brut = 0.0 
             couple_electrique=0
-            net_force = (-F_aero - F_roulement - F_gravite + F_wind)
-# Application du rendement de 0,97 pour simuler les pertes internes 
-            net_force_eff = 1.15 * net_force
-            dv_dt = net_force_eff / params.masse
+            
+#coefficient multiplicatif après la pente
+            if roue_libre_active:
+                F_aero_modif=coef_aero*(F_aero)
+                F_roulement_modif=coef_roul*F_roulement
+                dv_dt = (-F_roulement_modif-F_aero_modif-F_gravite + F_wind) / params.masse
             omega_idle = 10  # Aucun couple transmis
     # On fixe domega_m_dt à zéro pour éviter toute influence sur le calcul des forces
             domega_m_dt = -20*(omega_m-omega_idle)
@@ -446,14 +485,16 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
 
         dpos_dt = v
         rayon_courbe = piste.obtenir_rayon(pos)
+        
+        """
         if np.isfinite(rayon_courbe):
-                mu_lat = 2  # coefficient de friction latérale (à calibrer)
+                mu_lat = 3  # coefficient de friction latérale (à calibrer)
                 v_max_virage = np.sqrt(mu_lat * params.g * rayon_courbe)
         if v > v_max_virage:
-            k_frott =1  # constante de calibrage pour la décélération additionnelle
+            k_frott =0.7  # constante de calibrage pour la décélération additionnelle
             extra_decel = k_frott * (v - v_max_virage)
             dv_dt -= extra_decel
-
+            """
     # 6) Calcul de la consommation
         if rpm_moteur > 0 and moteur_actif:
             puissance_meca = (rpm_moteur * couple_moteur * 2*np.pi/60)
@@ -488,7 +529,7 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
     solution = solve_ivp(
         equations_dynamiques,
         [0, temps_max],
-        [0, 0, 109.96, 0],
+        [0, 0, 109.96/1.8, 0],
         method='RK45',
         events=[lambda t, y: y[0] - distance_totale, lambda t, y: t - temps_max],
         max_step=0.005
@@ -519,10 +560,7 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
     print(f"\nConsommation totale de carburant : {conso_totale:.2f} g")
     print(f"Consommation totale de carburant : {conso_totale_ml:.2f} ml")
 
-
-    
-
-    if moteur_elec: 
+    if moteur_elec and plot: 
         plot_results(solution.t, solution.y[0], solution.y[1],
                      forces, regimes_interp, ratios_interp,
                      solution.y[3],regime_elec_interp)
@@ -530,7 +568,7 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
         return (solution.t, solution.y[0], solution.y[1],
                 forces, regimes_interp, conso_totale, conso_totale_ml,
                 ratios_interp, solution.y[3],regime_elec_interp)
-    else:
+    elif plot :
         plot_results(solution.t, solution.y[0], solution.y[1],
                      forces, regimes_interp, ratios_interp,
                      solution.y[3])
@@ -540,7 +578,7 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
                 ratios_interp, solution.y[3]) 
 
 # =============================================================================
-# 8) Fonction de tracé des résultats
+# 9) Fonction de tracé des résultats
 # =============================================================================
 
 def plot_results(t_eval, position, vitesse, forces,
@@ -613,7 +651,7 @@ def plot_results(t_eval, position, vitesse, forces,
 
 
 # =============================================================================
-# 9) Fonction de sauvegarde des résultats dans un fichier CSV
+# 10) Fonction de sauvegarde des résultats dans un fichier CSV
 # =============================================================================
 
 def save_simulation_data_to_csv(t_eval, position, vitesse,
@@ -636,22 +674,22 @@ def save_simulation_data_to_csv(t_eval, position, vitesse,
     print(f"Simulation data saved to {file_name}")
 
 # =============================================================================
-# 10) Exécution principale
+# 11) Exécution principale
 # =============================================================================
 
 if __name__=="__main__":
     t_vals, pos_vals, vit_vals, forces_vals, rpm_vals, conso_tot, conso_tot_ml, ratio_vals, conso_instant_vals= simuler_vehicule_et_calculer_conso(
         distance_totale=distance.iloc[-1],
         borne_min1=0,
-        borne_max1=8.39,
-        borne_min2=5.8,
+        borne_max1=8.4,
+        borne_min2=5.5,
         borne_max2=7.7,
-        borne_min3=7,
+        borne_min3=6.7,
         borne_max3=7.3,
         temps_max=228,
         vent_active=False,
         vitesse_vent=5*0.514, 
-        wind_angle_global=np.deg2rad(135),
+        wind_angle_global=np.deg2rad(10),
         aero_active=True,
         gravite_active=True,
         enviolo_on=True,
@@ -665,7 +703,7 @@ if __name__=="__main__":
         regimes_moteur=rpm_vals,
         ratios_utilises=ratio_vals,
         consommation=conso_instant_vals,
-        file_name="simulation_results_normal.csv"
+        file_name="simulation_results_1.csv"
    )
 
 lap_4_data=pd.read_csv("lap_4_data.csv")
@@ -676,7 +714,7 @@ lap_4_data.ffill(inplace=True)
 time_real=lap_4_data["lap_obc_timestamp"]
 velocity_real=lap_4_data["gps_speed"]/3.6
 position_real=lap_4_data["lap_dist"]
-"""
+
 plt.figure(figsize=(10, 6))
 plt.plot(pos_vals, vit_vals, label='Vitesse Simulée', color='green')
 plt.plot(position_real,velocity_real, label='Vitesse Réelle', color='red', linestyle='--')
@@ -692,89 +730,107 @@ plt.plot(time_real,position_real,label="position en fonction du temps réel", co
 plt.grid(True)
 plt.show()
 
+plt.figure()
+plt.plot(t_vals,rpm_vals)
+plt.show()
+wind_speed = 5 * 0.514
+wind_angle_global = np.deg2rad(0)
 
-wind_speed=5*0.514           # vitesse du vent en m/s
-wind_angle_global = np.deg2rad(135)
-  # angle du vent en radians par rapport à l'axe x
-C_wind = 0.5                       # coefficient pour la force de vent
+wind_vector = np.array([
+    wind_speed*np.cos(wind_angle_global),
+    wind_speed*np.sin(wind_angle_global)
+])
 
-# On crée le vecteur vent global (constant)
-wind_vector = np.array([wind_speed*np.cos(wind_angle_global),
-                        wind_speed*np.sin(wind_angle_global)])
-
-# Création de la figure et tracé du circuit
 fig, ax = plt.subplots(figsize=(10,8))
 ax.plot(pos_x, pos_y, 'k-', label='Circuit')
 
-# On définit une échelle pour les flèches (à ajuster selon vos données)
-arrow_scale = 20
+# Texte pour afficher Cx à chaque frame
+text_cx = ax.text(0.02, 0.95, "", transform=ax.transAxes,
+                  fontsize=12, color='purple')
 
-# Initialisation : on prend le premier point
+# Point voiture et orientation
 i0 = 0
-x0 = pos_x[i0]
-y0 = pos_y[i0]
+x0, y0 = pos_x[i0], pos_y[i0]
+car_point, = ax.plot(x0, y0, 'bo', markersize=6, label='Voiture')
 
-# Tracé initial de la position de la voiture (point bleu)
-car_point, = ax.plot(x0, y0, 'bo', markersize=8, label='Voiture')
+heading_quiver = ax.quiver(
+    x0, y0, 0, 0,
+    angles='xy', scale_units='xy', scale=0.1,
+    pivot='mid', color='b', width=0.005,
+    label='Cap Voiture'
+)
 
-# On crée des objets quiver pour les flèches.
-# Flèche du cap de la voiture (bleue)
-init_heading = heading_interp(distance[i0])
-car_dir = np.array([np.cos(init_heading), np.sin(init_heading)])
-heading_quiver = ax.quiver(x0, y0, car_dir[0], car_dir[1],
-                           angles='xy', scale_units='xy', scale=0.2,
-                           color='b', width=0.005, label='Cap Voiture')
+# Vent global (rouge)
+wind_quiver = ax.quiver(
+    x0, y0,
+    wind_vector[0], wind_vector[1],
+    angles='xy', scale_units='xy', scale=0.1,
+    pivot='mid', color='r', width=0.005,
+    label='Vent global'
+)
 
-# Flèche du vent global (rouge) : on le trace en partant de la position de la voiture
-wind_quiver = ax.quiver(x0, y0, wind_vector[0], wind_vector[1],
-                        angles='xy', scale_units='xy', scale=0.05,
-                        color='r', width=0.005, label='Vent global')
+# Projection du vent sur l’axe longitudinal (verte)
+proj_quiver = ax.quiver(
+    x0, y0, 0, 0,
+    angles='xy', scale_units='xy', scale=0.05,
+    pivot='mid', color='g', width=0.005,
+    label='Vent projeté'
+)
 
-# Flèche de la projection du vent sur le cap de la voiture (verte)
-# Calcul initial
-v_wind_along = np.dot(wind_vector, car_dir)
-eff_wind = v_wind_along * car_dir
-wind_proj_quiver = ax.quiver(x0, y0, eff_wind[0], eff_wind[1],
-                             angles='xy', scale_units='xy', scale=0.05,
-                             color='g', width=0.005, label='Vent (proj.)')
+# Traînée aérodynamique due à la vitesse (cyan)
+aero_quiver = ax.quiver(
+    x0, y0, 0, 0,
+    angles='xy', scale_units='xy', scale=0.005,
+    pivot='mid', color='c', width=0.005,
+    label='Traînée vitesse'
+)
 
-ax.legend()
+ax.legend(loc='upper right')
 ax.set_xlabel("X (m)")
 ax.set_ylabel("Y (m)")
-ax.set_title("Animation du véhicule et vecteurs de vent")
+ax.set_title("Vecteurs : cap, vent, vent projeté & traînée")
+ax.set_xlim(pos_x.min()-5, pos_x.max()+5)
+ax.set_ylim(pos_y.min()-5, pos_y.max()+5)
 ax.grid(True)
 
 def update(i):
-    # Position actuelle de la voiture
-    x = pos_x[i]
-    y = pos_y[i]
+    x, y = pos_x[i], pos_y[i]
     car_point.set_data(x, y)
-    
-    # Récupère l'angle de la trajectoire via l'interpolateur
-    # On suppose que distance[i] est la distance cumulative à ce point
-    current_distance = distance[i] if not hasattr(distance, 'iloc') else distance.iloc[i]
-    current_heading = heading_interp(current_distance)
-    car_dir = np.array([np.cos(current_heading), np.sin(current_heading)])
-    
-    # Mise à jour de la flèche du cap de la voiture
-    heading_quiver.set_offsets(np.array([[x, y]]))
+
+    # --- cap du véhicule ---
+    heading = heading_interp(distance.iloc[i])
+    car_dir = np.array([np.cos(heading), np.sin(heading)])
+    heading_quiver.set_offsets([[x, y]])
     heading_quiver.set_UVC(car_dir[0], car_dir[1])
-    
-    # Mise à jour de la flèche du vent global (elle reste constante, mais se déplace avec la voiture)
-    wind_quiver.set_offsets(np.array([[x, y]]))
+
+    # --- vent global ---
+    wind_quiver.set_offsets([[x, y]])
     wind_quiver.set_UVC(wind_vector[0], wind_vector[1])
-    
-    # Calcul de la projection du vent sur la direction du véhicule
-    v_wind_along = np.dot(wind_vector, car_dir)
-    eff_wind = v_wind_along * car_dir
-    wind_proj_quiver.set_offsets(np.array([[x, y]]))
-    wind_proj_quiver.set_UVC(eff_wind[0], eff_wind[1])
-    
-    return car_point, heading_quiver, wind_quiver, wind_proj_quiver
 
-anim = FuncAnimation(fig, update, frames=len(pos_x), interval=50, blit=True)
+    # --- projection du vent ---
+    v_proj = np.dot(wind_vector, car_dir)
+    proj_vec = v_proj * car_dir
+    proj_quiver.set_offsets([[x, y]])
+    proj_quiver.set_UVC(proj_vec[0], proj_vec[1])
 
-anim.save("animation.mp4", writer="ffmpeg", fps=20)
+    # --- traînée aérodynamique due à la vitesse ---
+    vr = vit_vals[i]
+    F_aero = 0.5 * 0.2 * 0.789 * 1.225 * vr**2
+    aero_vec = -F_aero * car_dir
+    aero_quiver.set_offsets([[x, y]])
+    aero_quiver.set_UVC(aero_vec[0], aero_vec[1])
+
+    # --- affichage du Cx pour le vent projeté ---
+    phi = np.arctan2(wind_vector[1], wind_vector[0]) - heading
+    phi = (phi + np.pi) % (2*np.pi) - np.pi
+    angle_rel = abs(np.degrees(phi))
+    Cx_wind = float(f_interp_cx(angle_rel))
+    text_cx.set_text(f"Cx_wind = {Cx_wind:.3f}")
+
+    # on renvoie TOUT ce qu'on veut redraw
+    return car_point, heading_quiver, wind_quiver, proj_quiver, aero_quiver, text_cx
+
+anim = FuncAnimation(fig, update, frames=len(pos_x),
+                     interval=50, blit=True)
 
 plt.show()
-"""
