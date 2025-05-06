@@ -16,7 +16,7 @@ from matplotlib.animation import FuncAnimation
 # 1) Importation et interpolation des données moteur
 # =============================================================================
 
-moteur_consomini = pd.read_excel(r"C:\Users\olivi\Desktop\Cours\5eme semestre\P5\Code\Mesures moteur Consomini.xlsx", "Moteur consomini")
+moteur_consomini = pd.read_excel("Mesures moteur Consomini.xlsx", sheet_name="Moteur consomini")
 moteur_consomini.columns = [col.lower() for col in moteur_consomini.columns]
 moteur_consomini.reset_index(drop=True, inplace=True)
 moteur_consomini.ffill(inplace=True)
@@ -71,7 +71,7 @@ f_interpol_P_elec=interp1d(x_elec,moteur_elec["pelec calc"],kind="linear",fill_v
 # =============================================================================
 # 3) Importation des données enviolo
 # =============================================================================
-data_enviolo = pd.read_excel(r"C:\Users\olivi\Desktop\Cours\5eme semestre\P5\Code\calcul enviolo-reel-26-04.xlsx", skiprows=12)
+data_enviolo = pd.read_excel("calcul enviolo-reel-26-04.xlsx", skiprows=12)
 data_enviolo.columns = [col.lower() for col in data_enviolo.columns]
 data_enviolo.reset_index(drop=True, inplace=True)
 data_enviolo.ffill(inplace=True)
@@ -102,7 +102,7 @@ f_interp_env = interp1d(x_env, y_env, kind="linear", fill_value="extrapolate")
 # 4) Chargement des coordonnées de la piste
 # =============================================================================
 
-xyz = pd.read_csv(r'C:\Users\olivi\Desktop\Cours\5eme semestre\P5\data\xyz_coordinates_lap4.csv')
+xyz = pd.read_csv('xyz_coordinates_lap4.csv')
 xyz.columns = [col.lower() for col in xyz.columns]
 distance = xyz["cumulative_distance"]
 altitude = xyz["z"]
