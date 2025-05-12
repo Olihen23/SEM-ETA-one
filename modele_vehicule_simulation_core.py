@@ -380,7 +380,7 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
 
         if not pente_passe:
             if phase == 1:
-                if v >= borne_min1:
+                if v <= borne_min1:
                     moteur_actif = True
                     moteur_elec_actif=True
                 elif v >= borne_max1:
@@ -531,7 +531,7 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
     solution = solve_ivp(
         equations_dynamiques,
         [0, temps_max],
-        [0, 2.11, 109.96/1.8, 0],
+        [0, 0, 109.96/1.8, 0],
         method='RK45',
         events=[lambda t, y: y[0] - distance_totale, lambda t, y: t - temps_max],
         max_step=0.005
