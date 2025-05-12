@@ -243,7 +243,7 @@ with st.expander("🚗 Animation : Simulé vs Réel en fonction des vitesses"):
         except Exception as e:
             st.warning(f"Erreur lors de l'animation comparative : {e}")
 
-    with st.expander("🌍 Animation 3D du circuit"):
+with st.expander("🌍 Animation 3D du circuit"):
 
         try:
         # Charger les coordonnées 3D avec altitude
