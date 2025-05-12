@@ -264,16 +264,19 @@ with st.expander("🌍 Animation 3D du circuit"):
 
             for t in common_times:
             # Véhicule simulé
+                alt_factor = 3 
+
                 d_sim = interp_sim_dist(t)
                 x_sim, y_sim, z_sim = interp_x_3d(d_sim), interp_y_3d(d_sim), interp_z_3d(d_sim)
-
+                
             # Véhicule réel
                 d_real = interp_real_dist(t)
                 x_real, y_real, z_real = interp_x_3d(d_real), interp_y_3d(d_real), interp_z_3d(d_real)
-
+                z_sim = interp_z_3d(d_sim) * alt_factor
+                z_real = interp_z_3d(d_real) * alt_factor
                 frames.append(go.Frame(data=[
                     go.Scatter3d(
-                        x=df_3d["x"], y=df_3d["y"], z=df_3d["z"],
+                        x=df_3d["x"], y=df_3d["y"], z=df_3d["z"]*alt_factor,
                         mode="lines", line=dict(color="black", width=4), name="Circuit"
                     ),
                     go.Scatter3d(
