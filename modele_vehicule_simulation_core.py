@@ -531,7 +531,7 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
     solution = solve_ivp(
         equations_dynamiques,
         [0, temps_max],
-        [0, 0, 109.96/1.8, 0],
+        [0, 2.11, 109.96/1.8, 0],
         method='RK45',
         events=[lambda t, y: y[0] - distance_totale, lambda t, y: t - temps_max],
         max_step=0.005
