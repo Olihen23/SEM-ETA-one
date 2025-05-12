@@ -220,6 +220,7 @@ if st.button("🌟 Lancer la simulation"):
 
 
     # --- Comparaison avec données réelles ---
+    try:
         lap_data = pd.read_csv("lap_4_data.csv")
         lap_data.columns = [col.lower() for col in lap_data.columns]
         lap_data.ffill(inplace=True)
