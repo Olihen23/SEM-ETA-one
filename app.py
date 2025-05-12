@@ -100,7 +100,7 @@ with st.expander("🛲️ Animation du vent (flèches dynamiques Matplotlib)"):
     ax.grid(True)
 
     buf = io.BytesIO()
-    anim.save(buf, format="gif", fps=20)
+    anim.save(buf, writer='pillow', format="gif", fps=20)
     buf.seek(0)
     st.image(buf, caption="Animation dynamique du véhicule", use_column_width=True)
 
@@ -207,4 +207,3 @@ if st.button("🌟 Lancer la simulation"):
 
     except Exception as e:
         st.warning(f"Données réelles non disponibles ou erreur lors du chargement : {e}")
-
