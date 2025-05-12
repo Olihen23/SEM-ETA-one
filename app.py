@@ -206,8 +206,8 @@ if st.button("🌟 Lancer la simulation"):
 
         st.plotly_chart(fig_anim, use_container_width=True)
 
-        except Exception as e:
-            st.warning(f"Erreur lors de l'animation de comparaison : {e}")
+    except Exception as e:
+        st.warning(f"Erreur lors de l'animation de comparaison : {e}")
 
 
 
