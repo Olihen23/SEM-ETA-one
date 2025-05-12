@@ -143,81 +143,6 @@ if st.button("🌟 Lancer la simulation"):
     st.plotly_chart(fig_conso, use_container_width=True)
 
     # --- Préchargement des données réelles ---
-    # --- Animation de deux points : réel vs simulé ---
-    try:
-        lap_data = pd.read_csv("lap_4_data.csv")
-        lap_data.columns = [col.lower() for col in lap_data.columns]
-        lap_data.ffill(inplace=True)
-
-        time_real = lap_data["lap_obc_timestamp"]
-        velocity_real = lap_data["gps_speed"] / 3.6  # km/h -> m/s
-        position_real = lap_data["lap_dist"]
-
-        frames = []
-        pas = 5
-
-        for i in range(0, len(position_real), pas):
-            frame_data = []
-
-        # --- Réel ---
-            if i < len(position_real):
-                dist_real = position_real.iloc[i]
-            # Trouver la position correspondante sur le circuit simulé
-                idx_nearest = np.abs(distance - dist_real).idxmin()
-                if idx_nearest < len(pos_x):
-                    x_real, y_real = pos_x[idx_nearest], pos_y[idx_nearest]
-                    frame_data.append(go.Scatter(
-                        x=[x_real], y=[y_real],
-                        mode="markers", marker=dict(color="red", size=12),
-                        name="Réel"
-                    ))
-
-        # --- Simulation ---
-            if i < len(pos_x):
-                x_sim, y_sim = pos_x[i], pos_y[i]
-                frame_data.append(go.Scatter(
-                    x=[x_sim], y=[y_sim],
-                    mode="markers", marker=dict(color="green", size=12),
-                    name="Simulation"
-                ))
-
-        # --- Circuit ---
-            frame_data.append(go.Scatter(
-                x=pos_x, y=pos_y,
-                mode="lines", line=dict(color="black"), name="Circuit"
-        ))
-
-            frames.append(go.Frame(data=frame_data, name=str(i)))
-
-        fig_anim = go.Figure(
-            data=frames[0].data,
-            frames=frames
-        )
-
-        fig_anim.update_layout(
-            title="Animation : Véhicule simulé vs réel",
-            xaxis=dict(title="X (m)"),
-            yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
-            updatemenus=[
-                dict(
-                    type="buttons",
-                    showactive=True,
-                    buttons=[
-                        dict(label="▶️ Play", method="animate",
-                             args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)]),
-                        dict(label="⏸ Pause", method="animate",
-                             args=[[None], dict(mode="immediate", frame=dict(duration=0, redraw=False))])
-                    ]
-                )
-            ]
-        )
-
-        st.plotly_chart(fig_anim, use_container_width=True)
-
-    except Exception as e:
-        st.warning(f"Erreur lors de l'animation de comparaison : {e}")
-
-
 
     # --- Comparaison avec données réelles ---
     try:
@@ -245,5 +170,78 @@ if st.button("🌟 Lancer la simulation"):
 
     except Exception as e:
         st.warning(f"Données réelles non disponibles ou erreur lors du chargement : {e}")
+
+from scipy.interpolate import interp1d
+
+    with st.expander("🚗 Animation : Simulé vs Réel en fonction des vitesses"):
+
+        try:
+            lap_data = pd.read_csv("lap_4_data.csv")
+            lap_data.columns = [col.lower() for col in lap_data.columns]
+            lap_data.ffill(inplace=True)
+
+            time_real = lap_data["lap_obc_timestamp"].values
+            position_real = lap_data["lap_dist"].values
+
+        # Interpolateurs x/y en fonction de la distance
+            interp_x = interp1d(distance, pos_x, kind='linear', fill_value="extrapolate")
+            interp_y = interp1d(distance, pos_y, kind='linear', fill_value="extrapolate")
+
+        # Interpolation de distance(t)
+            interp_sim_dist = interp1d(t_vals, pos_vals, bounds_error=False, fill_value="extrapolate")
+            interp_real_dist = interp1d(time_real, position_real, bounds_error=False, fill_value="extrapolate")
+
+            common_times = np.linspace(0, min(t_vals[-1], time_real[-1]), 150)
+            frames = []
+
+            for t in common_times:
+            # Simulation
+                d_sim = interp_sim_dist(t)
+                x_sim, y_sim = interp_x(d_sim), interp_y(d_sim)
+
+            # Réel
+                d_real = interp_real_dist(t)
+                x_real, y_real = interp_x(d_real), interp_y(d_real)
+
+                frames.append(go.Frame(data=[
+                    go.Scatter(x=pos_x, y=pos_y, mode="lines", line=dict(color="black"), name="Circuit"),
+                    go.Scatter(x=[x_sim], y=[y_sim], mode="markers", marker=dict(color="green", size=12), name="Simulation"),
+                    go.Scatter(x=[x_real], y=[y_real], mode="markers", marker=dict(color="red", size=12), name="Réel")
+                ], name=str(round(t, 1))))
+
+        # Initialisation
+            fig_anim = go.Figure(
+                data=frames[0].data,
+                frames=frames
+            )
+
+            fig_anim.update_layout(
+                title="Animation : Véhicule simulé vs réel (vitesse indépendante)",
+                xaxis=dict(title="X (m)"),
+                yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
+                updatemenus=[dict(
+                    type="buttons",
+                    showactive=True,
+                    buttons=[
+                        dict(label="▶️ Play", method="animate",
+                             args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)]),
+                        dict(label="⏸ Pause", method="animate",
+                             args=[[None], dict(mode="immediate", frame=dict(duration=0, redraw=False))])
+                    ]
+                )],
+                    sliders=[dict(
+                    steps=[dict(method="animate", args=[[f.name], dict(mode="immediate", frame=dict(duration=0))],
+                                label=f.name) for f in frames],
+                    transition=dict(duration=0),
+                    x=0, y=0, currentvalue=dict(font=dict(size=12), prefix="Temps (s): ", visible=True),
+                    len=1.0
+                )]
+            )
+
+            st.plotly_chart(fig_anim, use_container_width=True)
+
+        except Exception as e:
+            st.warning(f"Erreur lors de l'animation comparative : {e}")
+
 
 
