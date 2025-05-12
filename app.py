@@ -100,7 +100,9 @@ with st.expander("🛲️ Animation du vent (flèches dynamiques Matplotlib)"):
     ax.grid(True)
 
     buf = io.BytesIO()
-    anim.save(buf, writer='pillow', format="gif", fps=20)
+    from matplotlib.animation import PillowWriter
+    writer = PillowWriter(fps=20)
+    anim.save(buf, writer=writer, format="gif")
     buf.seek(0)
     st.image(buf, caption="Animation dynamique du véhicule", use_column_width=True)
 
