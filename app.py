@@ -11,12 +11,12 @@ import pandas as pd
 from modele_vehicule import simuler_vehicule_et_calculer_conso, distance, pos_x, pos_y, heading_interp
 
 st.set_page_config(layout="wide")
-st.title("Simulateur Shell Eco Marathon \U0001F697")
+st.title("Simulateur Shell Eco Marathon \U0001F697\U0001F4A8")
 
 # --- Paramètres globaux de simulation ---
 st.sidebar.header("Paramètres de simulation")
 vent = st.sidebar.checkbox("Activer le vent", value=False, key="vent_checkbox")
-vitesse_vent = st.sidebar.slider("Vitesse du vent (m/s)", 0.0, 10.0, 2.57, step=0.1, key="vent_vitesse", format="%.2f")
+vitesse_vent = st.sidebar.slider("Vitesse du vent (m/s)", 0.0, 10.0, 2.57, step=0.1, key="vent_vitesse")
 angle_vent_deg = st.sidebar.slider("Angle du vent (degrés)", 0, 360, 135, key="vent_angle")
 wind_angle_global = np.deg2rad(angle_vent_deg)
 aero = st.sidebar.checkbox("Activer l'aérodynamique", value=True)
@@ -53,7 +53,7 @@ with st.expander("🛲️ Animation du vent (flèches dynamiques Matplotlib)"):
     def update_quiver(i):
         x = pos_x[i]
         y = pos_y[i]
-        car_point.set_data(x, y)
+        car_point.set_data([x], [y])
         heading = heading_interp(distance.iloc[i])
         car_dir = np.array([np.cos(heading), np.sin(heading)])
         v_proj = np.dot(wind_vector, car_dir)
