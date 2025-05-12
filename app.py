@@ -264,7 +264,7 @@ with st.expander("🌍 Animation 3D du circuit"):
 
             for t in common_times:
             # Véhicule simulé
-                alt_factor = 3
+                alt_factor = 5
 
                 d_sim = interp_sim_dist(t)
                 x_sim, y_sim, z_sim = interp_x_3d(d_sim), interp_y_3d(d_sim), interp_z_3d(d_sim)
