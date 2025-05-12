@@ -380,7 +380,7 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
 
         if not pente_passe:
             if phase == 1:
-                if v <= borne_min1:
+                if v >= borne_min1:
                     moteur_actif = True
                     moteur_elec_actif=True
                 elif v >= borne_max1:
