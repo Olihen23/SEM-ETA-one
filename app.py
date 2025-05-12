@@ -183,6 +183,41 @@ if st.button("🌟 Lancer la simulation"):
     fig_conso.update_layout(title="Consommation en carburant", xaxis_title="Temps (s)", yaxis_title="ml")
     st.plotly_chart(fig_conso, use_container_width=True)
 
+    # --- Animation de deux points : réel vs simulé ---
+    try:
+        fig_anim = go.Figure()
+        max_len = max(len(position_real), len(pos_vals))
+        frames = []
+        for i in range(0, max_len, 5):
+            data = []
+            if i < len(pos_vals):
+                data.append(go.Scatter(x=[pos_x[i]], y=[pos_y[i]], mode="markers", marker=dict(color="green", size=12), name="Simulation"))
+            if i < len(position_real):
+                idx_real = np.clip(i, 0, len(position_real) - 1)
+                x_real, y_real = pos_x[idx_real], pos_y[idx_real]
+                data.append(go.Scatter(x=[x_real], y=[y_real], mode="markers", marker=dict(color="red", size=12), name="Réel"))
+            data.append(go.Scatter(x=pos_x, y=pos_y, mode="lines", line=dict(color="black"), name="Circuit"))
+            frames.append(go.Frame(data=data, name=str(i)))
+
+        fig_anim.add_trace(go.Scatter(x=[pos_x[0]], y=[pos_y[0]], mode="markers", marker=dict(color="green", size=12), name="Simulation"))
+        fig_anim.add_trace(go.Scatter(x=[pos_x[0]], y=[pos_y[0]], mode="markers", marker=dict(color="red", size=12), name="Réel"))
+        fig_anim.add_trace(go.Scatter(x=pos_x, y=pos_y, mode="lines", line=dict(color="black"), name="Circuit"))
+
+        fig_anim.update_layout(
+            title="Animation : Véhicule simulé vs réel",
+            xaxis=dict(title="X (m)"),
+            yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
+            updatemenus=[dict(type="buttons", showactive=False,
+                              buttons=[dict(label="Play", method="animate",
+                                            args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)])])],
+            frames=frames
+        )
+        st.plotly_chart(fig_anim, use_container_width=True)
+
+    except Exception as e:
+        st.warning(f"Erreur lors de l'animation de comparaison : {e}")
+
+
     # --- Comparaison avec données réelles ---
     try:
         lap_data = pd.read_csv("lap_4_data.csv")
