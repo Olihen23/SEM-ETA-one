@@ -50,14 +50,21 @@ with st.expander("🛲️ Animation du vent (vecteurs simulés Plotly)"):
         frames.append(go.Frame(data=data, name=str(i)))
 
     fig_vec = go.Figure(data=frames[0].data)
-    fig_vec.update_layout(
+    fig_vec = go.Figure(data=frames[0].data, frames=frames)
+fig_vec.update_layout(
         title="Animation vecteurs : cap, vent, projection",
         xaxis=dict(title="X (m)"),
         yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
-        updatemenus=[dict(type="buttons", showactive=False,
-                          buttons=[dict(label="Play", method="animate",
-                                        args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)])])],
-        frames=frames
+       updatemenus=[dict(
+    type="buttons",
+    showactive=True,
+    buttons=[
+        dict(label="▶️ Play", method="animate",
+             args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)]),
+        dict(label="⏸ Pause", method="animate",
+             args=[[None], dict(mode="immediate", frame=dict(duration=0, redraw=False), transition=dict(duration=0))])
+    ])]
+
     )
     st.plotly_chart(fig_vec, use_container_width=True)
 
