@@ -49,7 +49,7 @@ with st.expander("🛲️ Animation du vent (vecteurs simulés Plotly)"):
         ]
         frames.append(go.Frame(data=data, name=str(i)))
 
-    fig_vec = go.Figure(data=frames[0].data)
+
     fig_vec = go.Figure(data=frames[0].data, frames=frames)
 fig_vec.update_layout(
         title="Animation vecteurs : cap, vent, projection",
