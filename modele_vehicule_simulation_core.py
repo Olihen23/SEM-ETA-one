@@ -321,7 +321,7 @@ def simuler_vehicule_et_calculer_conso(distance_totale,
                                        enviolo_on=True,
                                        moteur_elec=False,
                                        coef_aero=1.6,
-                                       coef_roul=2,
+                                       coef_roul=1.5,
                                        plot=True
                                        ):
 
