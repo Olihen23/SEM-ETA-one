@@ -149,10 +149,34 @@ if st.button("🌟 Lancer la simulation"):
         lap_data = pd.read_csv("lap_4_data.csv")
         lap_data.columns = [col.lower() for col in lap_data.columns]
         lap_data.ffill(inplace=True)
+      
 
-        time_real = lap_data["lap_obc_timestamp"]
-        velocity_real = lap_data["gps_speed"] / 3.6  # km/h -> m/s
-        position_real = lap_data["lap_dist"]
+# Première vraie valeur
+        v_init = lap_data["gps_speed"].iloc[0] / 3.6  # m/s
+        d_init = lap_data["lap_dist"].iloc[0]
+        t_acc = 2.0  # secondes d'accélération
+
+# Création des points interpolés de 0 à v_init
+        n_interp = 10
+        t_interp = np.linspace(0, t_acc, n_interp)
+        v_interp = np.linspace(0, v_init, n_interp)
+        d_interp = np.linspace(0, d_init, n_interp)
+
+        interp_df = pd.DataFrame({
+            "lap_obc_timestamp": t_interp,
+            "gps_speed": v_interp * 3.6,  # on repasse en km/h
+            "lap_dist": d_interp
+        })
+
+# Fusionner et réordonner
+        lap_data = pd.concat([interp_df, lap_data], ignore_index=True)
+        lap_data.sort_values("lap_obc_timestamp", inplace=True)
+        lap_data.reset_index(drop=True, inplace=True)
+
+# Extraire les colonnes finales
+        time_real = lap_data["lap_obc_timestamp"].values
+        velocity_real = lap_data["gps_speed"].values / 3.6  # km/h → m/s
+        position_real = lap_data["lap_dist"].values
 
         fig_compare_speed = go.Figure()
         fig_compare_speed.add_trace(go.Scatter(x=pos_vals, y=vit_vals, name="Vitesse simulée", line=dict(color="green")))
