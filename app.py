@@ -11,7 +11,7 @@ import pandas as pd
 from modele_vehicule import simuler_vehicule_et_calculer_conso, distance, pos_x, pos_y, heading_interp
 
 st.set_page_config(layout="wide")
-st.title("Simulateur Shell Eco Marathon \U0001F697\U0001F4A8")
+st.title("Simulateur Shell Eco Marathon")
 
 # --- Paramètres globaux de simulation ---
 st.sidebar.header("Paramètres de simulation")
@@ -25,7 +25,7 @@ enviolo = st.sidebar.checkbox("Utiliser Enviolo", value=True)
 moteur_elec = st.sidebar.checkbox("Activer moteur électrique", value=False)
 
 # --- Animation du vent en Plotly ---
-with st.expander("🛲️ Animation du vent (vecteurs simulés Plotly)"):
+with st.expander("Animation du vent"):
     frames = []
     arrow_scale = 6
     for i in range(0, len(pos_x), max(len(pos_x)//60, 1)):
@@ -56,9 +56,9 @@ with st.expander("🛲️ Animation du vent (vecteurs simulés Plotly)"):
             xaxis=dict(title="X (m)"),
             yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
             updatemenus=[dict(type="buttons",showactive=True,buttons=[
-            dict(label="▶️ Play", method="animate",
+            dict(label="Play", method="animate",
              args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)]),
-            dict(label="⏸ Pause", method="animate",
+            dict(label="Pause", method="animate",
              args=[[None], dict(mode="immediate", frame=dict(duration=0, redraw=False), transition=dict(duration=0))])
             ])]
 
@@ -66,12 +66,12 @@ with st.expander("🛲️ Animation du vent (vecteurs simulés Plotly)"):
     st.plotly_chart(fig_vec, use_container_width=True)
 
 # --- Paramètres de simulation spécifiques ---
-borne_min1 = st.sidebar.slider("Borne min phase 1", 0.0, 20.0, 0.0, step=0.1, format="%.2f")
-borne_max1 = st.sidebar.slider("Borne max phase 1", 0.0, 20.0, 8.39, step=0.1, format="%.2f")
-borne_min2 = st.sidebar.slider("Borne min phase 2", 0.0, 20.0, 5.8, step=0.1, format="%.2f")
-borne_max2 = st.sidebar.slider("Borne max phase 2", 0.0, 20.0, 7.7, step=0.1, format="%.2f")
-borne_min3 = st.sidebar.slider("Borne min phase 3", 0.0, 20.0, 7.0, step=0.1, format="%.2f")
-borne_max3 = st.sidebar.slider("Borne max phase 3", 0.0, 20.0, 7.3, step=0.1, format="%.2f")
+borne_min1 = st.sidebar.slider("Borne min phase 1", 0.0, 20.0, 0.0, step=0.05, format="%.2f")
+borne_max1 = st.sidebar.slider("Borne max phase 1", 0.0, 20.0, 8.39, step=0.05, format="%.2f")
+borne_min2 = st.sidebar.slider("Borne min phase 2", 0.0, 20.0, 5.8, step=0.05, format="%.2f")
+borne_max2 = st.sidebar.slider("Borne max phase 2", 0.0, 20.0, 7.7, step=0.05, format="%.2f")
+borne_min3 = st.sidebar.slider("Borne min phase 3", 0.0, 20.0, 7.0, step=0.05, format="%.2f")
+borne_max3 = st.sidebar.slider("Borne max phase 3", 0.0, 20.0, 7.3, step=0.05, format="%.2f")
 distance_totale = distance.iloc[-1]
 temps_max = st.sidebar.slider("Temps max de simulation (s)", 100, 600, 228)
 
@@ -242,6 +242,82 @@ with st.expander("🚗 Animation : Simulé vs Réel en fonction des vitesses"):
 
         except Exception as e:
             st.warning(f"Erreur lors de l'animation comparative : {e}")
+
+    with st.expander("🌍 Animation 3D du circuit"):
+
+        try:
+        # Charger les coordonnées 3D avec altitude
+            df_3d = pd.read_csv("xyz_coordinates_lap4.csv")
+            df_3d.columns = [col.lower() for col in df_3d.columns]
+
+        # Interpolateurs 3D en fonction de la distance cumulée
+            interp_x_3d = interp1d(df_3d["cumulative_distance"], df_3d["x"], kind='linear', fill_value="extrapolate")
+            interp_y_3d = interp1d(df_3d["cumulative_distance"], df_3d["y"], kind='linear', fill_value="extrapolate")
+            interp_z_3d = interp1d(df_3d["cumulative_distance"], df_3d["z"], kind='linear', fill_value="extrapolate")
+
+        # Interpolation distance(t)
+            interp_sim_dist = interp1d(t_vals, pos_vals, bounds_error=False, fill_value="extrapolate")
+            interp_real_dist = interp1d(time_real, position_real, bounds_error=False, fill_value="extrapolate")
+
+            common_times = np.linspace(0, min(t_vals[-1], time_real[-1]), 150)
+            frames = []
+
+            for t in common_times:
+            # Véhicule simulé
+                d_sim = interp_sim_dist(t)
+                x_sim, y_sim, z_sim = interp_x_3d(d_sim), interp_y_3d(d_sim), interp_z_3d(d_sim)
+
+            # Véhicule réel
+                d_real = interp_real_dist(t)
+                x_real, y_real, z_real = interp_x_3d(d_real), interp_y_3d(d_real), interp_z_3d(d_real)
+
+                frames.append(go.Frame(data=[
+                    go.Scatter3d(
+                        x=df_3d["x"], y=df_3d["y"], z=df_3d["z"],
+                        mode="lines", line=dict(color="black", width=4), name="Circuit"
+                    ),
+                    go.Scatter3d(
+                        x=[x_sim], y=[y_sim], z=[z_sim],
+                        mode="markers", marker=dict(color="green", size=6), name="Simulation"
+                    ),
+                    go.Scatter3d(
+                        x=[x_real], y=[y_real], z=[z_real],
+                        mode="markers", marker=dict(color="red", size=6), name="Réel"
+                    )
+                ], name=str(round(t, 1))))
+
+        # Graphique 3D avec animation
+            fig_3d = go.Figure(data=frames[0].data, frames=frames)
+            fig_3d.update_layout(
+                title="Animation 3D : Simulé vs Réel",
+                scene=dict(
+                    xaxis_title='X (m)',
+                    yaxis_title='Y (m)',
+                    zaxis_title='Altitude (m)',
+                    aspectmode='data'
+                ),
+                updatemenus=[dict(
+                    type="buttons", showactive=True,
+                    buttons=[
+                        dict(label="▶️ Play", method="animate",
+                             args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)]),
+                        dict(label="⏸ Pause", method="animate",
+                             args=[[None], dict(mode="immediate", frame=dict(duration=0, redraw=False))])
+                    ]
+                )],
+                    sliders=[dict(
+                        steps=[dict(method="animate", args=[[f.name], dict(mode="immediate", frame=dict(duration=0))],
+                            label=f.name) for f in frames],
+                        transition=dict(duration=0),
+                        x=0, y=0, currentvalue=dict(font=dict(size=12), prefix="Temps (s): ", visible=True),
+                        len=1.0
+                    )]
+            )
+
+            st.plotly_chart(fig_3d, use_container_width=True)
+
+        except Exception as e:
+            st.warning(f"Erreur lors de l'animation 3D : {e}")
 
 
 
