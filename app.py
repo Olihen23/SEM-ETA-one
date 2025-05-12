@@ -208,7 +208,7 @@ with st.expander("🚗 Animation : Simulé vs Réel en fonction des vitesses"):
 # Première vraie valeur
             v_init = lap_data["gps_speed"].iloc[0] / 3.6  # m/s
             d_init = lap_data["lap_dist"].iloc[1]
-            t_acc = 4  # secondes d'accélération
+            t_acc = 10 # secondes d'accélération
 
 # Création des points interpolés de 0 à v_init
             n_interp = 40
