@@ -173,7 +173,7 @@ if st.button("🌟 Lancer la simulation"):
 
 from scipy.interpolate import interp1d
 
-    with st.expander("🚗 Animation : Simulé vs Réel en fonction des vitesses"):
+with st.expander("🚗 Animation : Simulé vs Réel en fonction des vitesses"):
 
         try:
             lap_data = pd.read_csv("lap_4_data.csv")
