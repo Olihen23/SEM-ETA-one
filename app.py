@@ -144,78 +144,78 @@ if st.button("🌟 Lancer la simulation"):
 
     # --- Préchargement des données réelles ---
     # --- Animation de deux points : réel vs simulé ---
-try:
-    lap_data = pd.read_csv("lap_4_data.csv")
-    lap_data.columns = [col.lower() for col in lap_data.columns]
-    lap_data.ffill(inplace=True)
+    try:
+        lap_data = pd.read_csv("lap_4_data.csv")
+        lap_data.columns = [col.lower() for col in lap_data.columns]
+        lap_data.ffill(inplace=True)
 
-    time_real = lap_data["lap_obc_timestamp"]
-    velocity_real = lap_data["gps_speed"] / 3.6  # km/h -> m/s
-    position_real = lap_data["lap_dist"]
+        time_real = lap_data["lap_obc_timestamp"]
+        velocity_real = lap_data["gps_speed"] / 3.6  # km/h -> m/s
+        position_real = lap_data["lap_dist"]
 
-    frames = []
-    pas = 5
+        frames = []
+        pas = 5
 
-    for i in range(0, len(position_real), pas):
-        frame_data = []
+        for i in range(0, len(position_real), pas):
+            frame_data = []
 
         # --- Réel ---
-        if i < len(position_real):
-            dist_real = position_real.iloc[i]
+            if i < len(position_real):
+                dist_real = position_real.iloc[i]
             # Trouver la position correspondante sur le circuit simulé
-            idx_nearest = np.abs(distance - dist_real).idxmin()
-            if idx_nearest < len(pos_x):
-                x_real, y_real = pos_x[idx_nearest], pos_y[idx_nearest]
-                frame_data.append(go.Scatter(
-                    x=[x_real], y=[y_real],
-                    mode="markers", marker=dict(color="red", size=12),
-                    name="Réel"
-                ))
+                idx_nearest = np.abs(distance - dist_real).idxmin()
+                if idx_nearest < len(pos_x):
+                    x_real, y_real = pos_x[idx_nearest], pos_y[idx_nearest]
+                    frame_data.append(go.Scatter(
+                        x=[x_real], y=[y_real],
+                        mode="markers", marker=dict(color="red", size=12),
+                        name="Réel"
+                    ))
 
         # --- Simulation ---
-        if i < len(pos_x):
-            x_sim, y_sim = pos_x[i], pos_y[i]
-            frame_data.append(go.Scatter(
-                x=[x_sim], y=[y_sim],
-                mode="markers", marker=dict(color="green", size=12),
-                name="Simulation"
-            ))
+            if i < len(pos_x):
+                x_sim, y_sim = pos_x[i], pos_y[i]
+                frame_data.append(go.Scatter(
+                    x=[x_sim], y=[y_sim],
+                    mode="markers", marker=dict(color="green", size=12),
+                    name="Simulation"
+                ))
 
         # --- Circuit ---
-        frame_data.append(go.Scatter(
-            x=pos_x, y=pos_y,
-            mode="lines", line=dict(color="black"), name="Circuit"
+            frame_data.append(go.Scatter(
+                x=pos_x, y=pos_y,
+                mode="lines", line=dict(color="black"), name="Circuit"
         ))
 
-        frames.append(go.Frame(data=frame_data, name=str(i)))
+            frames.append(go.Frame(data=frame_data, name=str(i)))
 
-    fig_anim = go.Figure(
-        data=frames[0].data,
-        frames=frames
-    )
+        fig_anim = go.Figure(
+            data=frames[0].data,
+            frames=frames
+        )
 
-    fig_anim.update_layout(
-        title="Animation : Véhicule simulé vs réel",
-        xaxis=dict(title="X (m)"),
-        yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
-        updatemenus=[
-            dict(
-                type="buttons",
-                showactive=True,
-                buttons=[
-                    dict(label="▶️ Play", method="animate",
-                         args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)]),
-                    dict(label="⏸ Pause", method="animate",
-                         args=[[None], dict(mode="immediate", frame=dict(duration=0, redraw=False))])
-                ]
-            )
-        ]
-    )
+        fig_anim.update_layout(
+            title="Animation : Véhicule simulé vs réel",
+            xaxis=dict(title="X (m)"),
+            yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
+            updatemenus=[
+                dict(
+                    type="buttons",
+                    showactive=True,
+                    buttons=[
+                        dict(label="▶️ Play", method="animate",
+                             args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)]),
+                        dict(label="⏸ Pause", method="animate",
+                             args=[[None], dict(mode="immediate", frame=dict(duration=0, redraw=False))])
+                    ]
+                )
+            ]
+        )
 
-    st.plotly_chart(fig_anim, use_container_width=True)
+        st.plotly_chart(fig_anim, use_container_width=True)
 
-except Exception as e:
-    st.warning(f"Erreur lors de l'animation de comparaison : {e}")
+    except Exception as e:
+        st.warning(f"Erreur lors de l'animation de comparaison : {e}")
 
 
 
