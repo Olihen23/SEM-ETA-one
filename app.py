@@ -49,14 +49,15 @@ with st.expander("🛲️ Animation du vent (vecteurs simulés Plotly)"):
         ]
         frames.append(go.Frame(data=data, name=str(i)))
 
-    fig_vec = go.Figure(data=frames[0].data, frames=frames)
+    fig_vec = go.Figure(data=frames[0].data)
     fig_vec.update_layout(
         title="Animation vecteurs : cap, vent, projection",
         xaxis=dict(title="X (m)"),
         yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
         updatemenus=[dict(type="buttons", showactive=False,
                           buttons=[dict(label="Play", method="animate",
-                                        args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)])])]
+                                        args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)])])],
+        frames=frames
     )
     st.plotly_chart(fig_vec, use_container_width=True)
 
@@ -137,7 +138,17 @@ if st.button("🌟 Lancer la simulation"):
     fig_conso.update_layout(title="Consommation en carburant", xaxis_title="Temps (s)", yaxis_title="ml")
     st.plotly_chart(fig_conso, use_container_width=True)
 
-    # --- Animation de deux points : réel vs simulé ---
+    # --- Préchargement des données réelles ---
+    try:
+        lap_data = pd.read_csv("lap_4_data.csv")
+        lap_data.columns = [col.lower() for col in lap_data.columns]
+        lap_data.ffill(inplace=True)
+
+        time_real = lap_data["lap_obc_timestamp"]
+        velocity_real = lap_data["gps_speed"] / 3.6  # km/h -> m/s
+        position_real = lap_data["lap_dist"]
+
+        # --- Animation de deux points : réel vs simulé ---
     try:
         fig_anim = go.Figure()
         max_len = max(len(position_real), len(pos_vals))
@@ -198,3 +209,4 @@ if st.button("🌟 Lancer la simulation"):
 
     except Exception as e:
         st.warning(f"Données réelles non disponibles ou erreur lors du chargement : {e}")
+
