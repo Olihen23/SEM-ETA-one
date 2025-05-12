@@ -149,7 +149,6 @@ if st.button("🌟 Lancer la simulation"):
         position_real = lap_data["lap_dist"]
 
         # --- Animation de deux points : réel vs simulé ---
-    try:
         fig_anim = go.Figure()
         max_len = max(len(position_real), len(pos_vals))
         frames = []
@@ -184,7 +183,6 @@ if st.button("🌟 Lancer la simulation"):
 
 
     # --- Comparaison avec données réelles ---
-    try:
         lap_data = pd.read_csv("lap_4_data.csv")
         lap_data.columns = [col.lower() for col in lap_data.columns]
         lap_data.ffill(inplace=True)
@@ -209,4 +207,5 @@ if st.button("🌟 Lancer la simulation"):
 
     except Exception as e:
         st.warning(f"Données réelles non disponibles ou erreur lors du chargement : {e}")
+
 
