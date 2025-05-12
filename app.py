@@ -162,10 +162,13 @@ if st.button("🌟 Lancer la simulation"):
                 data.append(go.Scatter(x=[pos_x[i]], y=[pos_y[i]], mode="markers", marker=dict(color="green", size=12), name="Simulation"))
             if i < len(position_real):
                 idx_real = np.clip(i, 0, len(position_real) - 1)
-                x_real, y_real = pos_x[idx_real], pos_y[idx_real]
+                # On approxime la position réelle sur le circuit via la distance
+                dist_real = position_real.iloc[idx_real]
+                # Trouver le point sur le circuit simulé le plus proche
+                idx_nearest = np.abs(distance - dist_real).idxmin()
+                x_real, y_real = pos_x[idx_nearest], pos_y[idx_nearest]
                 data.append(go.Scatter(x=[x_real], y=[y_real], mode="markers", marker=dict(color="red", size=12), name="Réel"))
-            data.append(go.Scatter(x=pos_x, y=pos_y, mode="lines", line=dict(color="black"), name="Circuit"))
-            frames.append(go.Frame(data=data, name=str(i)))
+
 
         fig_anim.add_trace(go.Scatter(x=[pos_x[0]], y=[pos_y[0]], mode="markers", marker=dict(color="green", size=12), name="Simulation"))
         fig_anim.add_trace(go.Scatter(x=[pos_x[0]], y=[pos_y[0]], mode="markers", marker=dict(color="red", size=12), name="Réel"))
