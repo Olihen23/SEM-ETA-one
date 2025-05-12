@@ -16,7 +16,7 @@ st.title("Simulateur Shell Eco Marathon \U0001F697")
 # --- Paramètres globaux de simulation ---
 st.sidebar.header("Paramètres de simulation")
 vent = st.sidebar.checkbox("Activer le vent", value=False, key="vent_checkbox")
-vitesse_vent = st.sidebar.slider("Vitesse du vent (m/s, format="%.2f")", 0.0, 10.0, 2.57, step=0.1, key="vent_vitesse")
+vitesse_vent = st.sidebar.slider("Vitesse du vent (m/s)", 0.0, 10.0, 2.57, step=0.1, key="vent_vitesse", format="%.2f")
 angle_vent_deg = st.sidebar.slider("Angle du vent (degrés)", 0, 360, 135, key="vent_angle")
 wind_angle_global = np.deg2rad(angle_vent_deg)
 aero = st.sidebar.checkbox("Activer l'aérodynamique", value=True)
