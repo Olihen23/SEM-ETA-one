@@ -153,7 +153,7 @@ if st.button("🌟 Lancer la simulation"):
 
 # Première vraie valeur
         v_init = lap_data["gps_speed"].iloc[0] / 3.6  # m/s
-        d_init = lap_data["lap_dist"].iloc[0]
+        d_init = lap_data["lap_dist"].iloc[1]
         t_acc = 2.0  # secondes d'accélération
 
 # Création des points interpolés de 0 à v_init
