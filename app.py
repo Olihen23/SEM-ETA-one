@@ -24,87 +24,42 @@ gravite = st.sidebar.checkbox("Activer la gravité", value=True)
 enviolo = st.sidebar.checkbox("Utiliser Enviolo", value=True)
 moteur_elec = st.sidebar.checkbox("Activer moteur électrique", value=False)
 
-# --- Animation du vent ---
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-import io
-import base64
-from PIL import Image
-
-with st.expander("🛲️ Animation du vent (flèches dynamiques Matplotlib)"):
-    wind_speed = vitesse_vent * 0.514
-    wind_angle_global = np.deg2rad(angle_vent_deg)
-    wind_vector = np.array([
-        wind_speed * np.cos(wind_angle_global),
-        wind_speed * np.sin(wind_angle_global)
-    ])
-
-    fig, ax = plt.subplots(figsize=(8, 6))
-    ax.plot(pos_x, pos_y, 'k-', label='Circuit')
-    car_point, = ax.plot([], [], 'bo', label='Voiture')
-    heading_quiver = ax.quiver([], [], [], [], color='b', scale=5, width=0.005, label='Cap')
-    wind_quiver = ax.quiver([], [], [], [], color='r', scale=5, width=0.005, label='Vent')
-    proj_quiver = ax.quiver([], [], [], [], color='g', scale=5, width=0.005, label='Vent proj.')
-    aero_quiver = ax.quiver([], [], [], [], color='c', scale=10, width=0.005, label='Traînée')
-    text_cx = ax.text(0.02, 0.95, '', transform=ax.transAxes, fontsize=12, color='purple')
-    wind_quiver = ax.quiver([], [], [], [], color='r', scale=5, width=0.005, label='Vent')
-    proj_quiver = ax.quiver([], [], [], [], color='g', scale=5, width=0.005, label='Vent proj.')
-
-    def update_quiver(i):
-        x = pos_x[i]
-        y = pos_y[i]
-        car_point.set_data([x], [y])
+# --- Animation du vent en Plotly ---
+with st.expander("🛲️ Animation du vent (vecteurs simulés Plotly)"):
+    frames = []
+    arrow_scale = 6
+    for i in range(0, len(pos_x), max(len(pos_x)//60, 1)):
+        x, y = pos_x[i], pos_y[i]
         heading = heading_interp(distance.iloc[i])
         car_dir = np.array([np.cos(heading), np.sin(heading)])
+        wind_vector = np.array([
+            vitesse_vent * 0.514 * np.cos(wind_angle_global),
+            vitesse_vent * 0.514 * np.sin(wind_angle_global)
+        ])
         v_proj = np.dot(wind_vector, car_dir)
         proj_vec = v_proj * car_dir
+        data = [
+            go.Scatter(x=pos_x, y=pos_y, mode="lines", name="Circuit", line=dict(color="black")),
+            go.Scatter(x=[x, x + car_dir[0]*arrow_scale], y=[y, y + car_dir[1]*arrow_scale],
+                       mode="lines+markers", name="Cap", line=dict(color="blue", width=3)),
+            go.Scatter(x=[x, x + wind_vector[0]*arrow_scale], y=[y, y + wind_vector[1]*arrow_scale],
+                       mode="lines+markers", name="Vent", line=dict(color="red", width=3)),
+            go.Scatter(x=[x, x + proj_vec[0]*arrow_scale], y=[y, y + proj_vec[1]*arrow_scale],
+                       mode="lines+markers", name="Vent proj.", line=dict(color="green", width=3)),
+        ]
+        frames.append(go.Frame(data=data, name=str(i)))
 
-        # Traînée aérodynamique
-        vr = vit_vals[i] if 'vit_vals' in locals() else 6  # valeur approximative si non simulé
-        Cx = 0.2  # à adapter selon ton modèle
-        S = 0.789
-        rho = 1.225
-        F_aero = 0.5 * Cx * S * rho * vr**2
-        aero_vec = -F_aero * car_dir
-
-        # Cx apparent du vent
-        phi = np.arctan2(wind_vector[1], wind_vector[0]) - heading
-        phi = (phi + np.pi) % (2 * np.pi) - np.pi
-        angle_rel = abs(np.degrees(phi))
-        try:
-            from data_cx import f_interp_cx  # ou définir ailleurs
-            Cx_wind = float(f_interp_cx(angle_rel))
-            text_cx.set_text(f"Cx_wind = {Cx_wind:.3f}")
-        except:
-            pass
-
-        heading_quiver.set_offsets([[x, y]])
-        heading_quiver.set_UVC(car_dir[0], car_dir[1])
-
-        wind_quiver.set_offsets([[x, y]])
-        wind_quiver.set_UVC(wind_vector[0], wind_vector[1])
-
-        proj_quiver.set_offsets([[x, y]])
-        proj_quiver.set_UVC(proj_vec[0], proj_vec[1])
-
-        aero_quiver.set_offsets([[x, y]])
-        aero_quiver.set_UVC(aero_vec[0], aero_vec[1])
-
-        return car_point, heading_quiver, wind_quiver, proj_quiver, aero_quiver
-
-    anim = FuncAnimation(fig, update_quiver, frames=range(0, len(pos_x), max(len(pos_x)//100, 1)), interval=60, blit=True)
-    ax.set_xlim(pos_x.min() - 5, pos_x.max() + 5)
-    ax.set_ylim(pos_y.min() - 5, pos_y.max() + 5)
-    ax.set_title("Vecteurs dynamiques : cap, vent et vent projeté")
-    ax.legend()
-    ax.grid(True)
-
-    buf = io.BytesIO()
-    from matplotlib.animation import PillowWriter
-    writer = PillowWriter(fps=20)
-    anim.save(buf, writer=writer, format="gif")
-    buf.seek(0)
-    st.image(buf, caption="Animation dynamique du véhicule", use_column_width=True)
+    fig_vec = go.Figure(data=frames[0].data)
+    fig_vec.update_layout(
+        title="Animation vecteurs : cap, vent, projection",
+        xaxis=dict(title="X (m)"),
+        yaxis=dict(title="Y (m)", scaleanchor="x", scaleratio=1),
+        updatemenus=[dict(type="buttons", showactive=False,
+                          buttons=[dict(label="Play", method="animate",
+                                        args=[None, dict(frame=dict(duration=100, redraw=True), fromcurrent=True)])])],
+        frames=frames
+    )
+    st.plotly_chart(fig_vec, use_container_width=True)
 
 # --- Paramètres de simulation spécifiques ---
 borne_min1 = st.sidebar.slider("Borne min phase 1", 0.0, 20.0, 0.0, step=0.1, format="%.2f")
